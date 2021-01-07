@@ -25,6 +25,8 @@ import io.vertx.sqlclient.impl.command.PrepareStatementCommand;
 import io.vertx.core.*;
 import io.vertx.sqlclient.impl.tracing.QueryTracer;
 
+import java.util.List;
+
 /**
  * @author <a href="mailto:julien@julienviet.com">Julien Viet</a>
  */
@@ -47,9 +49,21 @@ public abstract class SqlConnectionBase<C extends SqlClient> extends SqlClientBa
     return (C)this;
   }
 
+  public C prepare(String sql, List<Class<?>> parameterTypes, Handler<AsyncResult<PreparedStatement>> handler) {
+    Future<PreparedStatement> fut = prepare(sql, parameterTypes);
+    if (handler != null) {
+      fut.onComplete(handler);
+    }
+    return (C)this;
+  }
+
   public Future<PreparedStatement> prepare(String sql) {
+    return prepare(sql, (List<Class<?>>)null);
+  }
+
+  public Future<PreparedStatement> prepare(String sql, List<Class<?>> parameterTypes) {
     Promise<io.vertx.sqlclient.impl.PreparedStatement> promise = promise();
-    schedule(new PrepareStatementCommand(sql, true), promise);
+    schedule(new PrepareStatementCommand(sql, true, parameterTypes), promise);
     return promise.future().compose(
       cr -> Future.succeededFuture(PreparedStatementImpl.create(conn, tracer, metrics, context, cr, autoCommit())),
       err -> {

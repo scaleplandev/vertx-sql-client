@@ -21,6 +21,7 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
+import io.vertx.ext.unit.impl.TestContextImpl;
 import io.vertx.sqlclient.*;
 import io.vertx.sqlclient.impl.RowStreamInternal;
 import org.junit.After;
@@ -205,6 +206,24 @@ public abstract class PreparedQueryTestBase {
           }));
         }));
       }));
+    }));
+  }
+
+  @Test
+  public void testPreparedUpdateWithGivenTypes(TestContext ctx) {
+    connector.connect(ctx.asyncAssertSuccess(conn -> {
+      List<Class<?>> paramTypes = Arrays.asList(String.class, String.class);
+      conn
+        .prepare(statement("INSERT INTO mutable (id, val) VALUES(", ",", ")"),
+          paramTypes)
+        .compose(it -> it.query().execute(Tuple.of("value", "123456")))
+        .onComplete(res -> {
+          if (res.succeeded()) {
+            ctx.assertEquals(1, res.result().rowCount());
+          } else {
+            ((TestContextImpl)ctx).failed(res.cause());
+          }
+        });
     }));
   }
 
