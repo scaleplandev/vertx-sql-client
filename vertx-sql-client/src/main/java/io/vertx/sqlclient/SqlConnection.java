@@ -18,11 +18,14 @@
 package io.vertx.sqlclient;
 
 import io.vertx.codegen.annotations.Fluent;
+import io.vertx.codegen.annotations.GenIgnore;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.sqlclient.spi.DatabaseMetadata;
+
+import java.util.List;
 
 /**
  * A connection to the database server.
@@ -43,9 +46,25 @@ public interface SqlConnection extends SqlClient {
   SqlConnection prepare(String sql, Handler<AsyncResult<PreparedStatement>> handler);
 
   /**
+   * Create a prepared statement using the given {@code sql} string and parameter types.
+   *
+   * @param sql the sql
+   * @param parameterTypes types of the prepared query parameters
+   * @param handler the handler notified with the prepared query asynchronously
+   */
+  @Fluent
+  SqlConnection prepare(String sql, List<Class<?>> parameterTypes, Handler<AsyncResult<PreparedStatement>> handler);
+
+  /**
    * Like {@link #prepare(String, Handler)} but returns a {@code Future} of the asynchronous result
    */
   Future<PreparedStatement> prepare(String sql);
+
+  /**
+   * Like {@link #prepare(String, List, Handler)} but returns a {@code Future} of the asynchronous result
+   */
+  @GenIgnore
+  Future<PreparedStatement> prepare(String sql, List<Class<?>> parameterTypes);
 
   /**
    * Set an handler called with connection errors.
